@@ -39,7 +39,7 @@ public class BtSocketConnector {
 
     private final ScheduledExecutorService mScheduler;
     private ScheduledFuture<?> mScheduledAction;
-    private static final int INTERVAL_IN_MINS = 1;
+    private static final int INTERVAL_IN_MINS = 15;
     private static final long WAIT_TIME_AFTER_CONN_IN_MSEC = 10000;
 
     private boolean mStarted = false;
