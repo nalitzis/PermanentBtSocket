@@ -32,8 +32,12 @@ public class ClientUI extends Activity implements ConnectorListener {
         mConnectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mConnectButton.setText(R.string.stop);
                 mSocketConnector.start();
+                if(!mSocketConnector.isStarted()) {
+                    mConnectButton.setText(R.string.stop);
+                } else {
+                    mConnectButton.setText(R.string.start);
+                }
             }
         });
         mCntOkText = (TextView)findViewById(R.id.textViewConnOk);

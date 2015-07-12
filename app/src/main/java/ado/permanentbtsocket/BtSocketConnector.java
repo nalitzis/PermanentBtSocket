@@ -128,10 +128,11 @@ public class BtSocketConnector {
                         });
                     }
                     mClientSocket.close();
-                    mClientSocket = null;
                     Log.d(TAG, "ConnectExecutor.run(), closed socket");
                 } catch (IOException e) {
                     Log.e(TAG, "ConnectExecutor.run() error closing the client socket");
+                } finally {
+                    mClientSocket = null;
                 }
             }
         }
