@@ -3,6 +3,8 @@ package ado.permanentbtsocket;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import java.io.IOException;
@@ -37,17 +39,19 @@ public class BtSocketConnector {
 
     private final ScheduledExecutorService mScheduler;
     private ScheduledFuture<?> mScheduledAction;
-    private static final int INTERVAL_IN_MINS = 15;
+    private static final int INTERVAL_IN_MINS = 1;
     private static final long WAIT_TIME_AFTER_CONN_IN_MSEC = 10000;
 
     private boolean mStarted = false;
 
     private ConnectorListener mListener;
 
+    private Handler mUIHandler = new Handler(Looper.getMainLooper());
+
     BtSocketConnector(final ConnectorListener listener) {
         mListener = listener;
         mAdapter = BluetoothAdapter.getDefaultAdapter();
-        if(BluetoothAdapter.checkBluetoothAddress(BtConstants.REMOTE_SERVER_BT_ADDRESS)) {
+        if(!BluetoothAdapter.checkBluetoothAddress(BtConstants.REMOTE_SERVER_BT_ADDRESS)) {
             throw new IllegalArgumentException();
         }
         mRemoteDevice = mAdapter.getRemoteDevice(BtConstants.REMOTE_SERVER_BT_ADDRESS);
@@ -98,23 +102,34 @@ public class BtSocketConnector {
 
             //connect
             try {
+                Log.d(TAG, "ConnectExecutor.run(), trying to connect...");
                 mClientSocket.connect();
-                mListener.onConnectionSuccessful();
+                Log.d(TAG, "ConnectExecutor.run(), connected!");
+                mUIHandler.post(new Runnable() {
+                    public void run() {
+                        mListener.onConnectionSuccessful();
+                    }
+                });
+                //wait time (10 secs)
+                try {
+                    Thread.sleep(WAIT_TIME_AFTER_CONN_IN_MSEC);
+                } catch (InterruptedException e) {}
             } catch (IOException e) {
-                mListener.onConnectionError();
-            }
-
-            //wait time (10 secs)
-            try {
-                Thread.sleep(WAIT_TIME_AFTER_CONN_IN_MSEC);
-            } catch (InterruptedException e) {
-
+                Log.e(TAG, "ConnectExecutor.run(), connection error, IOException");
+                Log.e(TAG, "exception:", e);
             } finally {
                 //closing the client socket
                 try {
+                    if(!mClientSocket.isConnected()) {
+                        mUIHandler.post(new Runnable() {
+                            public void run() {
+                                mListener.onConnectionError();
+                            }
+                        });
+                    }
                     mClientSocket.close();
-                    //TODO do we need to recreate a new socket after a close() ?????
-                    Log.d(TAG, "ConnectExecutor.run(), closing socket successfully after 10secs");
+                    mClientSocket = null;
+                    Log.d(TAG, "ConnectExecutor.run(), closed socket");
                 } catch (IOException e) {
                     Log.e(TAG, "ConnectExecutor.run() error closing the client socket");
                 }

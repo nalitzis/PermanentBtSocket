@@ -1,18 +1,28 @@
 package ado.permanentbtsocket;
 
-import android.support.v7.app.ActionBarActivity;
+import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 
-public class ClientUI extends ActionBarActivity implements ConnectorListener {
+public class ClientUI extends Activity implements ConnectorListener {
+
+    private static final String TAG = "ClientUI";
 
     private Button mConnectButton;
 
     private BtSocketConnector mSocketConnector;
+
+    private int mCntOk = 0;
+    private int mCntError = 0;
+
+    private TextView mCntOkText;
+    private TextView mCntErrorText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,9 +36,12 @@ public class ClientUI extends ActionBarActivity implements ConnectorListener {
                 mSocketConnector.start();
             }
         });
+        mCntOkText = (TextView)findViewById(R.id.textViewConnOk);
+        mCntErrorText = (TextView)findViewById(R.id.textViewConnError);
 
         mSocketConnector = new BtSocketConnector(this);
     }
+
 
     @Override
     public void onDestroy() {
@@ -63,11 +76,14 @@ public class ClientUI extends ActionBarActivity implements ConnectorListener {
 
     @Override
     public void onConnectionSuccessful() {
-
+        mCntOk++;
+        mCntOkText.setText(""+mCntOk);
     }
 
     @Override
     public void onConnectionError() {
-
+        Log.d(TAG, "onConnectionError()");
+        mCntError++;
+        mCntErrorText.setText(""+mCntError);
     }
 }
